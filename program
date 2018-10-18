@@ -1,0 +1,91 @@
+from random import randint, seed
+
+from enum import Enum
+
+import matplotlib.pyplot as plt
+
+class Strategie(Enum):
+    CHANGER = 1
+    GARDER = 2
+    
+seed()
+
+def play_game(strategie):
+    '''Simule une partie du jeu Monty Hall.
+    
+    Cette fonction permet de simule le choix de la porte par le participant, 
+    l'élimination d'une mauvaise porte par le présentateur, et le choix finale.
+    Elle ne retourne que du le résultat de la partie, parce
+    que nous n'aurons besoin que du résultat pour effectuer nos calculs.
+    
+    Args : 
+        strategie (Strategie): La strategie du joueur
+        
+    Returns : 
+        bool: le joueur a-t-il gagné ? 
+    '''
+    
+    portes = [0, 1, 2]
+    bonne_porte = randint(0,2)
+    
+    #choix du joueur
+    premier_choix = randint(0, 2)
+    
+    #il nous reste deux portes
+    portes.remove(premier_choix)
+    
+    #Le présentateur élimine une porte
+    if premier_choix == bonne_porte:
+        portes.remove(portes[randint(0,1)])
+        
+    else :
+        portes = [bonne_porte]
+    
+    deuxieme_choix = 0
+    #Le deuxième choix dépend de la stratégie
+    if strategie == Strategie.CHANGER:
+        deuxieme_choix = portes[0]
+    elif strategie == strategie.GARDER:
+        deuxieme_choix = premier_choix
+    else:
+        raise ValueError("Stratégie non reconnue!")
+    
+    return deuxieme_choix == bonne_porte
+    
+ def play(strategie, nb_tours):
+    '''Simule une suite de tours du jeu.
+    Cette fonction renvoie les résultats de plusieurs parties
+    du jeu Monty Hall sous forme d'une liste de gains par le joueur.
+    
+    Args : 
+        strategie (Strategie): La strategie du joueur
+        nb_tours (int): Nombre de tours
+        
+    Returns : 
+        list : Liste des gains du joueurs à chaque partie
+    '''
+    
+    return [1 if play_game(strategie) else 0 for i in range(nb_tours)]
+    
+print("En changeant de porte, le joueur a gagné {} sur 10 000 parties.".format(sum(play(Strategie.CHANGER, 10000))))
+
+print("En gardant la même porte, le joueur a gagné {} sur 10 000 parties.".format(sum(play(Strategie.GARDER, 10000))))
+
+plot = plt.bar([1,2],[sum(play(Strategie.CHANGER, 10000)),sum(play(Strategie.GARDER, 10000))],tick_label=["Changer","Garder"])
+
+gains_GARDER = []
+gains_CHANGER = []
+samples = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
+for tours in samples :
+    gains_GARDER.append(play(Strategie.GARDER, tours))
+    gains_CHANGER.append(play(Strategie.CHANGER, tours))
+
+figure = plt.figure()
+plot = plt.scatter(samples, [sum(x)for x in gains_GARDER])
+plot = plt.scatter(samples, [sum(x)for x in gains_CHANGER])
+
+moyenne_gains_GARDER = sum(play(Strategie.GARDER, 10000))/10000
+moyenne_gains_CHANGER = sum(play(Strategie.CHANGER, 10000))/10000
+
+print(moyenne_gains_GARDER)
+print(moyenne_gains_CHANGER)
